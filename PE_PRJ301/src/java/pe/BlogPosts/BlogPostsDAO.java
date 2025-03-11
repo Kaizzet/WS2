@@ -1,6 +1,7 @@
 package pe.BlogPosts;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,50 +15,55 @@ public class BlogPostsDAO {
     /*
      * Lấy danh sách blog với từ khóa tìm kiếm và cột sắp xếp
      */
-    public List<BlogPostsDTO> list(String keyword, String sortCol) throws ClassNotFoundException {
-        List<BlogPostsDTO> list = new ArrayList<>();
-        String sql = "SELECT postid, title, content, author, publishdate FROM BlogPosts";
+public List<BlogPostsDTO> list(String title, String publishDate, String sortCol) throws ClassNotFoundException {
+    List<BlogPostsDTO> list = new ArrayList<>();
+    String sql = "SELECT postid, title, content, author, publishdate FROM BlogPosts WHERE 1=1";
 
-        // Xử lý tìm kiếm
-        if (keyword != null && !keyword.isEmpty()) {
-            sql += " WHERE title LIKE ? OR content LIKE ? OR author LIKE ?";
-        }
-
-        // Xử lý sắp xếp
-        if (sortCol != null && !sortCol.isEmpty()) {
-            sql += " ORDER BY " + sortCol + " ASC";
-        }
-
-        try (Connection con = DBUtils.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            if (keyword != null && !keyword.isEmpty()) {
-                stmt.setString(1, "%" + keyword + "%");
-                stmt.setString(2, "%" + keyword + "%");
-                stmt.setString(3, "%" + keyword + "%");
-            }
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    BlogPostsDTO post = new BlogPostsDTO();
-                    post.setPostid(rs.getInt("postid"));
-                    post.setTitle(rs.getString("title"));
-                    post.setContent(rs.getString("content"));
-                    post.setAuthor(rs.getString("author"));
-                    post.setPublishdate(rs.getDate("publishdate"));
-                    list.add(post);
-                }
-            }
-        } catch (SQLException ex) {
-            System.out.println("Error in BlogPostsDAO.list(): " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return list;
+    List<String> conditions = new ArrayList<>();
+    if (title != null && !title.isEmpty()) {
+        conditions.add("title LIKE ?");
+    }
+    if (publishDate != null && !publishDate.isEmpty()) {
+        conditions.add("publishdate = ?");
     }
 
-    /*
-     * Lấy thông tin chi tiết của một bài viết theo ID
-     */
+    if (!conditions.isEmpty()) {
+        sql += " AND " + String.join(" AND ", conditions);
+    }
+
+    if (sortCol != null && !sortCol.isEmpty()) {
+        sql += " ORDER BY " + sortCol + " ASC";
+    }
+
+    try (Connection con = DBUtils.getConnection();
+         PreparedStatement stmt = con.prepareStatement(sql)) {
+
+        int paramIndex = 1;
+        if (title != null && !title.isEmpty()) {
+            stmt.setString(paramIndex++, "%" + title + "%");
+        }
+        if (publishDate != null && !publishDate.isEmpty()) {
+            stmt.setDate(paramIndex++, Date.valueOf(publishDate));
+        }
+
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                BlogPostsDTO post = new BlogPostsDTO();
+                post.setPostid(rs.getInt("postid"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setAuthor(rs.getString("author"));
+                post.setPublishdate(rs.getDate("publishdate"));
+                list.add(post);
+            }
+        }
+    } catch (SQLException ex) {
+        System.out.println("Error in BlogPostsDAO.list(): " + ex.getMessage());
+        ex.printStackTrace();
+    }
+    return list;
+}
+
     public BlogPostsDTO load(int id) throws ClassNotFoundException {
         String sql = "SELECT postid, title, content, author, publishdate FROM BlogPosts WHERE postid = ?";
         try (Connection con = DBUtils.getConnection();

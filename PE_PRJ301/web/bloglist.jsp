@@ -15,11 +15,18 @@
 </a>
 
         
-        <form action='MainController' method=GET> 
-            <input name="keyword" type="text" value="<%= request.getParameter("keyword") != null ? request.getParameter("keyword") : "" %>">
-            <input type="submit" value="Search">
-            <input name="action" value="list" type="hidden">
-        </form>
+<form action='MainController' method=GET> 
+    <input type="hidden" name="action" value="list">
+    
+    <label>Search by Title:</label>
+    <input name="title" type="text" value="<%= request.getParameter("title") != null ? request.getParameter("title") : "" %>">
+
+    <label>Search by Date:</label>
+    <input name="publishDate" type="date" value="<%= request.getParameter("publishDate") != null ? request.getParameter("publishDate") : "" %>">
+
+    <input type="submit" value="Search">
+</form>
+
         
         <table border="1">
             <tr>

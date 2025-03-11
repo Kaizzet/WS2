@@ -61,11 +61,14 @@ public class MainController extends HttpServlet {
                 response.sendRedirect(LOGIN_PAGE);
                 return;
             } else if (action.equals("list")) {
-                String keyword = request.getParameter("keyword");
+                String title = request.getParameter("title");
+                String publishDate = request.getParameter("publishDate"); // Lấy ngày từ request
                 String sortCol = request.getParameter("colSort");
-                List<BlogPostsDTO> list = blogDAO.list(keyword, sortCol);
+
+                List<BlogPostsDTO> list = blogDAO.list(title, publishDate, sortCol);
                 request.setAttribute("bloglist", list);
                 url = HOME_PAGE;
+
             } else if (action.equals("details")) {
                 int id = Integer.parseInt(request.getParameter("id"));
                 BlogPostsDTO post = blogDAO.load(id);
